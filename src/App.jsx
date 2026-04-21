@@ -1,6 +1,45 @@
 import { useMemo, useState } from 'react';
 import './App.css';
 
+function IconHoliday({ size = 12 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  );
+}
+
+function IconAlert({ size = 14 }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+      <line x1="12" y1="9" x2="12" y2="13" />
+      <line x1="12" y1="17" x2="12.01" y2="17" />
+    </svg>
+  );
+}
+
 const SAMPLE_SPRINTS = `1|2026-04-27|2026-05-08
 2|2026-05-11|2026-05-22
 3|2026-05-25|2026-06-05
@@ -329,7 +368,10 @@ export default function App() {
       {allErrors.length > 0 && (
         <div className="errors">
           {allErrors.map((e, i) => (
-            <div key={i}>⚠ {e}</div>
+            <div key={i} className="error-line">
+              <IconAlert />
+              <span>{e}</span>
+            </div>
           ))}
         </div>
       )}
@@ -393,7 +435,13 @@ export default function App() {
                             <span className="task-title">{seg.task}</span>
                             <span className="task-meta">
                               {seg.span}s
-                              {hols.length > 0 && ` · 🌴${hols.length}`}
+                              {hols.length > 0 && (
+                                <>
+                                  {' · '}
+                                  <IconHoliday size={11} />
+                                  {hols.length}
+                                </>
+                              )}
                             </span>
                           </div>
                         </td>
@@ -405,7 +453,8 @@ export default function App() {
                         <td key={`${person}-${laneIdx}-${s.number}`} className="empty-cell">
                           {hols.length > 0 ? (
                             <div className="holiday-chip" title={hols.join(', ')}>
-                              🌴 {hols.length} off
+                              <IconHoliday />
+                              {hols.length} off
                             </div>
                           ) : (
                             <span className="muted">—</span>

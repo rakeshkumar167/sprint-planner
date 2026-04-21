@@ -82,11 +82,12 @@
   line-height: 1.6;
   resize: vertical;
   outline: none;
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
 
-.card textarea:focus {
+.card textarea:focus-visible {
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
 }
 
 .errors {
@@ -99,7 +100,13 @@
   color: #9f1239;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+}
+
+.error-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .timeline {
@@ -203,11 +210,15 @@ td.person-col.name {
 }
 
 .task-meta {
-  font-size: 10px;
+  font-size: 12px;
   opacity: 0.85;
   font-weight: 500;
   white-space: nowrap;
   flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
 }
 
 .empty-cell {
@@ -226,14 +237,15 @@ td.person-col.name {
 .holiday-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
   background: #fef3c7;
   color: #92400e;
   border: 1px solid #fcd34d;
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
 .empty {
@@ -339,6 +351,7 @@ td.person-col.name {
   padding: 3px 10px;
   font-size: 12px;
   color: var(--text);
+  font-variant-numeric: tabular-nums;
 }
 
 .contrib-pill b {
@@ -376,4 +389,15 @@ td.person-col.name {
   color: var(--text-dim);
   font-size: 13px;
   text-align: right;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
