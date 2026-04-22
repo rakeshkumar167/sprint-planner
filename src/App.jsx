@@ -306,6 +306,29 @@ export default function App() {
     });
   };
 
+  const taskGantt = useMemo(() => {
+    const byTask = new Map();
+    const order = [];
+    tasks.forEach((t) => {
+      if (!byTask.has(t.task)) {
+        byTask.set(t.task, { task: t.task, people: new Set(), sprints: new Set() });
+        order.push(t.task);
+      }
+      const rec = byTask.get(t.task);
+      rec.people.add(t.person);
+      t.sprints.forEach((n) => rec.sprints.add(n));
+    });
+    return order.map((name) => {
+      const rec = byTask.get(name);
+      return {
+        task: name,
+        people: [...rec.people],
+        runs: groupRuns([...rec.sprints], sprintNums),
+        color: hashColor(name),
+      };
+    });
+  }, [tasks, sprintNums]);
+
   const effort = useMemo(() => {
     const sprintByNum = new Map(sprints.map((s) => [s.number, s]));
     const byTask = new Map();
@@ -485,6 +508,89 @@ export default function App() {
               )}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="effort">
+        <h2 className="effort-title">Task delivery Gantt</h2>
+        <p className="effort-sub">
+          One row per task. Bars show the sprint window in which the task is being delivered (union across all contributors). Gaps split into separate runs.
+        </p>
+        <div className="timeline">
+          <div className="timeline-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th className="task-col">Task</th>
+                  {sprints.map((s) => (
+                    <th key={s.number} className="sprint-col">
+                      <div className="sprint-num">Sprint {s.number}</div>
+                      <div className="sprint-dates">
+                        {fmtDate(s.start)} – {fmtDate(s.end)}
+                      </div>
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {taskGantt.map((row) => {
+                  const runByStart = new Map();
+                  row.runs.forEach((run) => runByStart.set(run[0], run));
+                  const cells = [];
+                  let i = 0;
+                  while (i < sprints.length) {
+                    const s = sprints[i];
+                    const run = runByStart.get(s.number);
+                    if (run) {
+                      const span = run.length;
+                      const title = `${row.task} · sprints ${run[0]}–${run[run.length - 1]} · ${row.people.length} contributor${row.people.length === 1 ? '' : 's'}`;
+                      cells.push(
+                        <td key={`${row.task}-${s.number}`} colSpan={span} className="task-cell">
+                          <div
+                            className="task-chip"
+                            style={{ background: row.color.bg, color: row.color.fg }}
+                            title={title}
+                          >
+                            <span className="task-title">{row.task}</span>
+                            <span className="task-meta">{span}s · {row.people.length}p</span>
+                          </div>
+                        </td>
+                      );
+                      i += span;
+                    } else {
+                      cells.push(
+                        <td key={`${row.task}-${s.number}`} className="empty-cell">
+                          <span className="muted">—</span>
+                        </td>
+                      );
+                      i += 1;
+                    }
+                  }
+                  return (
+                    <tr key={row.task}>
+                      <td className="task-col name">
+                        <span className="task-swatch" style={{ background: row.color.bg }} />
+                        <span className="gantt-task-name">
+                          <span className="gantt-task-title">{row.task}</span>
+                          {row.people.length > 0 && (
+                            <span className="gantt-contribs">{row.people.join(', ')}</span>
+                          )}
+                        </span>
+                      </td>
+                      {cells}
+                    </tr>
+                  );
+                })}
+                {(taskGantt.length === 0 || sprints.length === 0) && (
+                  <tr>
+                    <td className="empty" colSpan={sprints.length + 1}>
+                      Add tasks and sprints to see the Gantt.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </section>
 

@@ -1,0 +1,947 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sprint Planner</title>
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --bg-2: #ffffff;
+    --panel: #ffffff;
+    --panel-2: #f1f3f9;
+    --border: #e3e6ef;
+    --border-strong: #c9cfdd;
+    --text: #3a4056;
+    --text-dim: #727a90;
+    --text-heading: #141826;
+    --accent: #6366f1;
+    --accent-2: #06b6d4;
+    --danger: #e11d48;
+    --shadow: 0 1px 2px rgba(20, 24, 38, 0.04), 0 8px 24px rgba(20, 24, 38, 0.06);
+
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100svh;
+    background:
+      radial-gradient(ellipse at top left, rgba(99, 102, 241, 0.08), transparent 55%),
+      radial-gradient(ellipse at bottom right, rgba(6, 182, 212, 0.07), transparent 55%),
+      var(--bg);
+  }
+
+  .app {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 48px 32px 64px;
+  }
+
+  .hero { margin-bottom: 32px; }
+
+  .hero h1 {
+    font-size: 40px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 8px;
+    background: linear-gradient(135deg, #141826 0%, #6366f1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .hero p { color: var(--text-dim); margin: 0; font-size: 16px; }
+
+  .inputs {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 1024px) {
+    .inputs { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.15s;
+  }
+
+  .card:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+  }
+
+  .card label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-heading);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .card .hint {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-dim);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  }
+
+  .card textarea {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .card textarea:focus-visible {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+  }
+
+  .errors {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #9f1239;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .error-line {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .timeline {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .timeline-scroll { overflow-x: auto; }
+
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 4px;
+    min-width: 720px;
+  }
+
+  th {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-heading);
+    font-size: 13px;
+    vertical-align: middle;
+  }
+
+  .person-col { width: 160px; min-width: 140px; }
+  .sprint-col { min-width: 160px; }
+
+  .task-col { width: 240px; min-width: 200px; }
+
+  td.task-col.name {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text-heading);
+    font-size: 13px;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .gantt-contribs {
+    font-size: 11px;
+    font-weight: 400;
+    color: var(--text-dim);
+    margin-top: 2px;
+  }
+
+  .gantt-task-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .gantt-task-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .sprint-num { font-size: 13px; font-weight: 600; color: var(--text-heading); }
+  .sprint-dates { font-size: 11px; color: var(--text-dim); margin-top: 2px; font-weight: 400; }
+
+  td {
+    padding: 2px;
+    vertical-align: middle;
+    border-radius: 8px;
+  }
+
+  td.person-col.name {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    font-weight: 600;
+    color: var(--text-heading);
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+
+  .task-cell { padding: 2px; }
+
+  .task-chip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    min-height: 28px;
+    box-shadow: 0 1px 2px rgba(20, 24, 38, 0.1);
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: default;
+  }
+
+  .task-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(20, 24, 38, 0.18);
+  }
+
+  .task-title {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .task-meta {
+    font-size: 12px;
+    opacity: 0.85;
+    font-weight: 500;
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+  }
+
+  .empty-cell {
+    background: var(--bg-2);
+    border: 1px dashed var(--border);
+    min-height: 28px;
+    text-align: center;
+    color: var(--text-dim);
+  }
+
+  .muted { color: var(--border-strong); font-size: 16px; }
+
+  .holiday-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fcd34d;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .empty {
+    text-align: center;
+    padding: 48px 16px !important;
+    color: var(--text-dim);
+    background: var(--bg-2);
+    border: 1px dashed var(--border);
+  }
+
+  .effort { margin-top: 32px; }
+
+  .effort-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-heading);
+    margin: 0 0 4px;
+  }
+
+  .effort-sub {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin: 0 0 12px;
+  }
+
+  .effort-table th {
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+  }
+
+  .effort-table td {
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+  }
+
+  .effort-table .effort-task-col { width: 260px; }
+  .effort-table .effort-total-col { text-align: left; }
+  .effort-table .effort-bar-col { width: 260px; }
+
+  .effort-bar-cell { padding: 10px 14px; }
+
+  .effort-bar-track {
+    width: 100%;
+    height: 14px;
+    background: var(--panel-2);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .effort-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.2s ease;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+
+  .effort-task {
+    background: var(--panel-2) !important;
+    font-weight: 600;
+    color: var(--text-heading);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .task-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 2px rgba(20, 24, 38, 0.15);
+  }
+
+  .contrib-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--bg-2);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-size: 12px;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .contrib-pill b { color: var(--accent); font-weight: 600; }
+
+  .effort-total {
+    padding: 8px 14px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .effort-total-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .effort-total-num {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-heading);
+    min-width: 44px;
+  }
+
+  .effort-contribs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .foot {
+    margin-top: 16px;
+    color: var(--text-dim);
+    font-size: 13px;
+    text-align: right;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="app">
+    <header class="hero">
+      <h1>Sprint Planner</h1>
+      <p>Plan people across sprints. Paste structured lines, see a calendar.</p>
+    </header>
+
+    <section class="inputs">
+      <div class="card">
+        <label>Sprint calendar <span class="hint">number | start | end</span></label>
+        <textarea id="ta-sprints" rows="5" spellcheck="false"></textarea>
+      </div>
+      <div class="card">
+        <label>Tasks <span class="hint">Person | Category | Task | sprint,numbers</span></label>
+        <textarea id="ta-tasks" rows="9" spellcheck="false"></textarea>
+      </div>
+      <div class="card">
+        <label>Holidays <span class="hint">Person | YYYY-MM-DD, YYYY-MM-DD</span></label>
+        <textarea id="ta-holidays" rows="5" spellcheck="false"></textarea>
+      </div>
+    </section>
+
+    <div id="errors-container"></div>
+
+    <section class="timeline">
+      <div class="timeline-scroll">
+        <table id="timeline-table">
+          <thead id="timeline-head"></thead>
+          <tbody id="timeline-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="effort">
+      <h2 class="effort-title">Category delivery Gantt</h2>
+      <p class="effort-sub">
+        One row per category. Bars show the superset of sprints across every task and contributor in that category. Gaps split into separate runs.
+      </p>
+      <div class="timeline">
+        <div class="timeline-scroll">
+          <table id="gantt-table">
+            <thead id="gantt-head"></thead>
+            <tbody id="gantt-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="effort">
+      <h2 class="effort-title">Effort estimate per category</h2>
+      <p class="effort-sub">
+        Person-days per category, summed across every task and contributor. Working days = weekdays in each sprint minus that person's holidays.
+      </p>
+      <div class="timeline">
+        <div class="timeline-scroll">
+          <table class="effort-table">
+            <thead>
+              <tr>
+                <th class="effort-task-col">Category</th>
+                <th class="effort-total-col">Total days</th>
+                <th class="effort-bar-col">Relative effort</th>
+              </tr>
+            </thead>
+            <tbody id="effort-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <footer class="foot" id="foot"></footer>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  const SAMPLE_SPRINTS = `1|2026-04-27|2026-05-08
+2|2026-05-11|2026-05-22
+3|2026-05-25|2026-06-05
+4|2026-06-08|2026-06-19
+5|2026-06-22|2026-07-03
+6|2026-07-06|2026-07-17`;
+
+  const SAMPLE_TASKS = `Alice|Platform|Auth service refactor|1,2
+Alice|Platform|API rate limiting|3,4
+Alice|Platform|SSO integration|5,6
+Bob|Commerce|Checkout redesign|1
+Bob|Commerce|Payment webhook migration|2,3,4
+Bob|Commerce|Refund flow|5,6
+Carol|Data|Analytics dashboard|1,2,3
+Carol|Infra|On-call rotation|4
+Carol|Data|Reporting exports|5,6
+Dan|Growth|Onboarding flow|1,2
+Dan|Mobile|Mobile push notifications|3,4
+Dan|Mobile|Deep links|5,6
+Eve|Design|Design system upgrade|1,2,3
+Eve|Design|Accessibility audit|4,5
+Eve|Design|Marketing site refresh|6
+Frank|Data|Data pipeline migration|1,2,3,4
+Frank|Data|ETL monitoring|5,6
+Grace|Search|Search relevance|1,2
+Grace|Search|Query autocomplete|3,4
+Grace|Search|Personalization|5,6
+Henry|Infra|Kubernetes upgrade|1,2
+Henry|Infra|Observability stack|3,4,5
+Henry|Infra|Secrets rotation|6
+Ivy|Support|Customer support tooling|1,2,3
+Ivy|Support|Ticket triage bot|4,5,6
+Jack|Commerce|Billing invoices|1,2
+Jack|Commerce|Tax calculation|3,4
+Jack|Commerce|Subscription lifecycle|5,6
+Karen|Mobile|iOS release 4.2|1,2
+Karen|Mobile|Android release 4.2|3,4
+Karen|Mobile|Crash reporting|5,6
+Leo|Security|Security audit|1,2,3
+Leo|Security|Pen test remediation|4,5
+Leo|Security|SOC2 evidence|6
+Mia|Internal|Internal tools|1,2
+Mia|Internal|Admin portal|3,4,5
+Mia|Internal|Audit logs|6
+Noah|Docs|Docs rewrite|1,2
+Noah|Docs|API reference|3,4
+Noah|Docs|Video tutorials|5,6
+Olivia|Growth|Growth experiments|1,2,3
+Olivia|Growth|Referral program|4,5,6`;
+
+  const SAMPLE_HOLIDAYS = `Alice|2026-05-04
+Bob|2026-05-26,2026-05-27
+Carol|2026-06-10
+Dan|2026-05-15
+Eve|2026-07-03
+Frank|2026-05-25,2026-05-26
+Grace|2026-06-29,2026-06-30,2026-07-01
+Henry|2026-05-11
+Ivy|2026-07-10
+Jack|2026-06-05
+Karen|2026-05-18,2026-05-19
+Leo|2026-06-22
+Mia|2026-07-13,2026-07-14
+Noah|2026-04-30
+Olivia|2026-06-15,2026-06-16`;
+
+  const TASK_PALETTE = [
+    { bg: 'linear-gradient(135deg,#e0e7ff,#c7d2fe)', fg: '#3730a3' },
+    { bg: 'linear-gradient(135deg,#ffedd5,#fed7aa)', fg: '#9a3412' },
+    { bg: 'linear-gradient(135deg,#ccfbf1,#a5f3fc)', fg: '#115e59' },
+    { bg: 'linear-gradient(135deg,#fce7f3,#fbcfe8)', fg: '#9d174d' },
+    { bg: 'linear-gradient(135deg,#dcfce7,#d9f99d)', fg: '#166534' },
+    { bg: 'linear-gradient(135deg,#ffe4e6,#fecdd3)', fg: '#9f1239' },
+    { bg: 'linear-gradient(135deg,#ede9fe,#ddd6fe)', fg: '#5b21b6' },
+    { bg: 'linear-gradient(135deg,#e0f2fe,#bae6fd)', fg: '#075985' },
+    { bg: 'linear-gradient(135deg,#fef9c3,#fef08a)', fg: '#854d0e' },
+    { bg: 'linear-gradient(135deg,#e0e7ff,#a5b4fc)', fg: '#3730a3' },
+  ];
+
+  const HOLIDAY_SVG = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+  const HOLIDAY_SVG_SM = '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>';
+  const ALERT_SVG = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>';
+
+  function escapeHTML(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function parseSprints(text) {
+    const rows = [];
+    const errors = [];
+    text.split('\n').forEach((line, idx) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const parts = trimmed.split('|').map(p => p.trim());
+      if (parts.length !== 3) {
+        errors.push(`Sprint line ${idx + 1}: expected "number|start|end"`);
+        return;
+      }
+      const num = Number(parts[0]);
+      const start = new Date(parts[1]);
+      const end = new Date(parts[2]);
+      if (Number.isNaN(num) || Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        errors.push(`Sprint line ${idx + 1}: invalid number or dates`);
+        return;
+      }
+      rows.push({ number: num, start, end });
+    });
+    rows.sort((a, b) => a.number - b.number);
+    return { sprints: rows, errors };
+  }
+
+  function parseTasks(text) {
+    const rows = [];
+    const errors = [];
+    text.split('\n').forEach((line, idx) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const parts = trimmed.split('|').map(p => p.trim());
+      if (parts.length !== 4) {
+        errors.push(`Task line ${idx + 1}: expected "Person|Category|Task|sprint,numbers"`);
+        return;
+      }
+      const [person, category, task, sprintList] = parts;
+      const sprintNums = sprintList
+        .split(',')
+        .map(s => Number(s.trim()))
+        .filter(n => !Number.isNaN(n));
+      if (!person || !category || !task || sprintNums.length === 0) {
+        errors.push(`Task line ${idx + 1}: missing person, category, task, or sprint numbers`);
+        return;
+      }
+      rows.push({ person, category, task, sprints: sprintNums });
+    });
+    return { tasks: rows, errors };
+  }
+
+  function parseHolidays(text) {
+    const map = new Map();
+    const errors = [];
+    text.split('\n').forEach((line, idx) => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const parts = trimmed.split('|').map(p => p.trim());
+      if (parts.length !== 2) {
+        errors.push(`Holiday line ${idx + 1}: expected "Person|date,date"`);
+        return;
+      }
+      const [person, dateList] = parts;
+      const dates = dateList.split(',').map(d => d.trim()).filter(Boolean);
+      if (!map.has(person)) map.set(person, new Set());
+      dates.forEach(d => {
+        if (Number.isNaN(new Date(d).getTime())) {
+          errors.push(`Holiday line ${idx + 1}: bad date "${d}"`);
+        } else {
+          map.get(person).add(d);
+        }
+      });
+    });
+    return { holidays: map, errors };
+  }
+
+  function fmtDate(d) {
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function workingDaysInSprint(sprint) {
+    let count = 0;
+    const d = new Date(sprint.start);
+    while (d <= sprint.end) {
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) count += 1;
+      d.setDate(d.getDate() + 1);
+    }
+    return count;
+  }
+
+  function holidayDaysInSprint(person, sprint, holidays) {
+    const dates = holidays.get(person);
+    if (!dates) return 0;
+    let count = 0;
+    dates.forEach(d => {
+      const dt = new Date(d);
+      if (Number.isNaN(dt.getTime())) return;
+      const dow = dt.getDay();
+      if (dow === 0 || dow === 6) return;
+      if (dt >= sprint.start && dt <= sprint.end) count += 1;
+    });
+    return count;
+  }
+
+  function groupRuns(sprintNums, allSprintNums) {
+    const sorted = [...new Set(sprintNums)].sort((a, b) => a - b);
+    const runs = [];
+    let cur = [];
+    sorted.forEach(n => {
+      if (!allSprintNums.includes(n)) return;
+      if (cur.length === 0) {
+        cur = [n];
+      } else if (allSprintNums.indexOf(n) === allSprintNums.indexOf(cur[cur.length - 1]) + 1) {
+        cur.push(n);
+      } else {
+        runs.push(cur);
+        cur = [n];
+      }
+    });
+    if (cur.length) runs.push(cur);
+    return runs;
+  }
+
+  function hashColor(key) {
+    let h = 0;
+    for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    return TASK_PALETTE[h % TASK_PALETTE.length];
+  }
+
+  function holidaysInSprint(person, sprint, holidays) {
+    const dates = holidays.get(person);
+    if (!dates) return [];
+    return [...dates].filter(d => {
+      const dt = new Date(d);
+      return dt >= sprint.start && dt <= sprint.end;
+    });
+  }
+
+  const taSprints = document.getElementById('ta-sprints');
+  const taTasks = document.getElementById('ta-tasks');
+  const taHolidays = document.getElementById('ta-holidays');
+  const errorsContainer = document.getElementById('errors-container');
+  const timelineHead = document.getElementById('timeline-head');
+  const timelineBody = document.getElementById('timeline-body');
+  const ganttHead = document.getElementById('gantt-head');
+  const ganttBody = document.getElementById('gantt-body');
+  const effortBody = document.getElementById('effort-body');
+  const foot = document.getElementById('foot');
+
+  taSprints.value = SAMPLE_SPRINTS;
+  taTasks.value = SAMPLE_TASKS;
+  taHolidays.value = SAMPLE_HOLIDAYS;
+
+  function render() {
+    const { sprints, errors: sprintErrors } = parseSprints(taSprints.value);
+    const { tasks, errors: taskErrors } = parseTasks(taTasks.value);
+    const { holidays, errors: holidayErrors } = parseHolidays(taHolidays.value);
+
+    const sprintNums = sprints.map(s => s.number);
+
+    const peopleSet = new Set();
+    tasks.forEach(t => peopleSet.add(t.person));
+    holidays.forEach((_, p) => peopleSet.add(p));
+    const people = [...peopleSet];
+
+    const rowsByPerson = new Map();
+    people.forEach(p => rowsByPerson.set(p, []));
+    tasks.forEach(t => {
+      if (!rowsByPerson.has(t.person)) rowsByPerson.set(t.person, []);
+      const runs = groupRuns(t.sprints, sprintNums);
+      runs.forEach(run => {
+        rowsByPerson.get(t.person).push({
+          task: t.task,
+          category: t.category,
+          startSprint: run[0],
+          span: run.length,
+          color: hashColor(t.category),
+        });
+      });
+    });
+
+    const sprintByNum = new Map(sprints.map(s => [s.number, s]));
+    const byCategory = new Map();
+    tasks.forEach(t => {
+      let personDays = 0;
+      t.sprints.forEach(n => {
+        const sp = sprintByNum.get(n);
+        if (!sp) return;
+        const wd = workingDaysInSprint(sp);
+        const hd = holidayDaysInSprint(t.person, sp, holidays);
+        personDays += Math.max(0, wd - hd);
+      });
+      if (!byCategory.has(t.category)) byCategory.set(t.category, { category: t.category, total: 0, byPerson: new Map(), color: hashColor(t.category) });
+      const rec = byCategory.get(t.category);
+      rec.total += personDays;
+      rec.byPerson.set(t.person, (rec.byPerson.get(t.person) || 0) + personDays);
+    });
+    const effort = [...byCategory.values()].map(r => ({
+      ...r,
+      contributors: [...r.byPerson.entries()].map(([person, days]) => ({ person, days })).sort((a, b) => b.days - a.days),
+    })).sort((a, b) => b.total - a.total);
+
+    const allErrors = [...sprintErrors, ...taskErrors, ...holidayErrors];
+
+    if (allErrors.length > 0) {
+      errorsContainer.innerHTML = `<div class="errors">${allErrors.map(e => `<div class="error-line">${ALERT_SVG}<span>${escapeHTML(e)}</span></div>`).join('')}</div>`;
+    } else {
+      errorsContainer.innerHTML = '';
+    }
+
+    let headHTML = '<tr><th class="person-col">Person</th>';
+    sprints.forEach(s => {
+      headHTML += `<th class="sprint-col"><div class="sprint-num">Sprint ${s.number}</div><div class="sprint-dates">${escapeHTML(fmtDate(s.start))} – ${escapeHTML(fmtDate(s.end))}</div></th>`;
+    });
+    headHTML += '</tr>';
+    timelineHead.innerHTML = headHTML;
+
+    let bodyHTML = '';
+    if (people.length === 0) {
+      bodyHTML = `<tr><td class="empty" colspan="${sprints.length + 1}">Add a task above to get started.</td></tr>`;
+    } else {
+      people.forEach(person => {
+        const segments = (rowsByPerson.get(person) || []).slice().sort((a, b) => a.startSprint - b.startSprint);
+
+        const lanes = [];
+        segments.forEach(seg => {
+          const lane = lanes.find(l => {
+            const last = l[l.length - 1];
+            return last.startSprint + last.span <= seg.startSprint;
+          });
+          if (lane) lane.push(seg);
+          else lanes.push([seg]);
+        });
+        if (lanes.length === 0) lanes.push([]);
+
+        lanes.forEach((laneSegs, laneIdx) => {
+          let cellsHTML = '';
+          let i = 0;
+          while (i < sprints.length) {
+            const s = sprints[i];
+            const seg = laneSegs.find(x => x.startSprint === s.number);
+            if (seg) {
+              const hols = [];
+              for (let k = 0; k < seg.span; k++) {
+                const sp = sprints[i + k];
+                if (sp) hols.push(...holidaysInSprint(person, sp, holidays));
+              }
+              const titleText = `${seg.task} · ${seg.span} sprint${seg.span > 1 ? 's' : ''}${hols.length > 0 ? ` · ${hols.length} holiday${hols.length > 1 ? 's' : ''}` : ''}`;
+              const holSuffix = hols.length > 0 ? ` · ${HOLIDAY_SVG_SM}${hols.length}` : '';
+              cellsHTML += `<td colspan="${seg.span}" class="task-cell"><div class="task-chip" style="background:${seg.color.bg};color:${seg.color.fg}" title="${escapeHTML(titleText)}"><span class="task-title">${escapeHTML(seg.task)}</span><span class="task-meta">${seg.span}s${holSuffix}</span></div></td>`;
+              i += seg.span;
+            } else {
+              const hols = laneIdx === 0 ? holidaysInSprint(person, s, holidays) : [];
+              if (hols.length > 0) {
+                cellsHTML += `<td class="empty-cell"><div class="holiday-chip" title="${escapeHTML(hols.join(', '))}">${HOLIDAY_SVG}${hols.length} off</div></td>`;
+              } else {
+                cellsHTML += `<td class="empty-cell"><span class="muted">—</span></td>`;
+              }
+              i += 1;
+            }
+          }
+          const laneExtra = laneIdx > 0 ? ' class="lane-extra"' : '';
+          const nameCell = laneIdx === 0 ? `<td class="person-col name" rowspan="${lanes.length}">${escapeHTML(person)}</td>` : '';
+          bodyHTML += `<tr${laneExtra}>${nameCell}${cellsHTML}</tr>`;
+        });
+      });
+    }
+    timelineBody.innerHTML = bodyHTML;
+
+    let ganttHeadHTML = '<tr><th class="task-col">Task</th>';
+    sprints.forEach(s => {
+      ganttHeadHTML += `<th class="sprint-col"><div class="sprint-num">Sprint ${s.number}</div><div class="sprint-dates">${escapeHTML(fmtDate(s.start))} – ${escapeHTML(fmtDate(s.end))}</div></th>`;
+    });
+    ganttHeadHTML += '</tr>';
+    ganttHead.innerHTML = ganttHeadHTML;
+
+    const byCat = new Map();
+    const categoryOrder = [];
+    tasks.forEach(t => {
+      if (!byCat.has(t.category)) {
+        byCat.set(t.category, { people: new Set(), sprints: new Set(), tasks: new Set() });
+        categoryOrder.push(t.category);
+      }
+      const rec = byCat.get(t.category);
+      rec.people.add(t.person);
+      rec.tasks.add(t.task);
+      t.sprints.forEach(n => rec.sprints.add(n));
+    });
+
+    let ganttBodyHTML = '';
+    if (categoryOrder.length === 0 || sprints.length === 0) {
+      ganttBodyHTML = `<tr><td class="empty" colspan="${sprints.length + 1}">Add tasks and sprints to see the Gantt.</td></tr>`;
+    } else {
+      categoryOrder.forEach(categoryName => {
+        const rec = byCat.get(categoryName);
+        const color = hashColor(categoryName);
+        const runs = groupRuns([...rec.sprints], sprintNums);
+        const runByStart = new Map();
+        runs.forEach(run => runByStart.set(run[0], run));
+
+        const taskList = [...rec.tasks].join(', ');
+        const catCell = `<td class="task-col name"><span class="task-swatch" style="background:${color.bg}"></span><span class="gantt-task-name"><span class="gantt-task-title">${escapeHTML(categoryName)}</span>${rec.tasks.size > 0 ? `<span class="gantt-contribs">${escapeHTML(taskList)}</span>` : ''}</span></td>`;
+
+        let cellsHTML = '';
+        let i = 0;
+        while (i < sprints.length) {
+          const s = sprints[i];
+          const run = runByStart.get(s.number);
+          if (run) {
+            const span = run.length;
+            const title = `${categoryName} · sprints ${run[0]}–${run[run.length - 1]} · ${rec.tasks.size} task${rec.tasks.size === 1 ? '' : 's'} · ${rec.people.size} contributor${rec.people.size === 1 ? '' : 's'}`;
+            cellsHTML += `<td colspan="${span}" class="task-cell"><div class="task-chip" style="background:${color.bg};color:${color.fg}" title="${escapeHTML(title)}"><span class="task-title">${escapeHTML(categoryName)}</span><span class="task-meta">${span}s · ${rec.tasks.size}t · ${rec.people.size}p</span></div></td>`;
+            i += span;
+          } else {
+            cellsHTML += `<td class="empty-cell"><span class="muted">—</span></td>`;
+            i += 1;
+          }
+        }
+        ganttBodyHTML += `<tr>${catCell}${cellsHTML}</tr>`;
+      });
+    }
+    ganttBody.innerHTML = ganttBodyHTML;
+
+    let effortHTML = '';
+    if (effort.length === 0) {
+      effortHTML = '<tr><td class="empty" colspan="3">Add tasks and sprints to compute effort.</td></tr>';
+    } else {
+      const max = effort[0].total || 1;
+      effort.forEach(e => {
+        const pct = Math.max(2, (e.total / max) * 100);
+        const contribs = e.contributors.map(c => `<span class="contrib-pill">${escapeHTML(c.person)} <b>${c.days}d</b></span>`).join('');
+        effortHTML += `<tr>
+          <td class="effort-task"><span class="task-swatch" style="background:${e.color.bg}"></span>${escapeHTML(e.category)}</td>
+          <td class="effort-total"><div class="effort-total-row"><span class="effort-total-num">${e.total}d</span><div class="effort-contribs">${contribs}</div></div></td>
+          <td class="effort-bar-cell"><div class="effort-bar-track"><div class="effort-bar-fill" style="width:${pct}%;background:${e.color.bg}"></div></div></td>
+        </tr>`;
+      });
+    }
+    effortBody.innerHTML = effortHTML;
+
+    foot.textContent = `${people.length} people · ${tasks.length} tasks · ${sprints.length} sprints`;
+  }
+
+  taSprints.addEventListener('input', render);
+  taTasks.addEventListener('input', render);
+  taHolidays.addEventListener('input', render);
+
+  render();
+})();
+</script>
+</body>
+</html>

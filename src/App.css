@@ -150,6 +150,43 @@ th {
   min-width: 160px;
 }
 
+.task-col {
+  width: 240px;
+  min-width: 200px;
+}
+
+td.task-col.name {
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  font-weight: 600;
+  color: var(--text-heading);
+  font-size: 13px;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gantt-task-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.gantt-task-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-contribs {
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-dim);
+}
+
 .sprint-num {
   font-size: 13px;
   font-weight: 600;
