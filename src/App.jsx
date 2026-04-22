@@ -47,48 +47,48 @@ const SAMPLE_SPRINTS = `1|2026-04-27|2026-05-08
 5|2026-06-22|2026-07-03
 6|2026-07-06|2026-07-17`;
 
-const SAMPLE_TASKS = `Alice|Auth service refactor|1,2
-Alice|API rate limiting|3,4
-Alice|SSO integration|5,6
-Bob|Checkout redesign|1
-Bob|Payment webhook migration|2,3,4
-Bob|Refund flow|5,6
-Carol|Analytics dashboard|1,2,3
-Carol|On-call rotation|4
-Carol|Reporting exports|5,6
-Dan|Onboarding flow|1,2
-Dan|Mobile push notifications|3,4
-Dan|Deep links|5,6
-Eve|Design system upgrade|1,2,3
-Eve|Accessibility audit|4,5
-Eve|Marketing site refresh|6
-Frank|Data pipeline migration|1,2,3,4
-Frank|ETL monitoring|5,6
-Grace|Search relevance|1,2
-Grace|Query autocomplete|3,4
-Grace|Personalization|5,6
-Henry|Kubernetes upgrade|1,2
-Henry|Observability stack|3,4,5
-Henry|Secrets rotation|6
-Ivy|Customer support tooling|1,2,3
-Ivy|Ticket triage bot|4,5,6
-Jack|Billing invoices|1,2
-Jack|Tax calculation|3,4
-Jack|Subscription lifecycle|5,6
-Karen|iOS release 4.2|1,2
-Karen|Android release 4.2|3,4
-Karen|Crash reporting|5,6
-Leo|Security audit|1,2,3
-Leo|Pen test remediation|4,5
-Leo|SOC2 evidence|6
-Mia|Internal tools|1,2
-Mia|Admin portal|3,4,5
-Mia|Audit logs|6
-Noah|Docs rewrite|1,2
-Noah|API reference|3,4
-Noah|Video tutorials|5,6
-Olivia|Growth experiments|1,2,3
-Olivia|Referral program|4,5,6`;
+const SAMPLE_TASKS = `Alice|Platform|Auth service refactor|1,2
+Alice|Platform|API rate limiting|3,4
+Alice|Platform|SSO integration|5,6
+Bob|Commerce|Checkout redesign|1
+Bob|Commerce|Payment webhook migration|2,3,4
+Bob|Commerce|Refund flow|5,6
+Carol|Data|Analytics dashboard|1,2,3
+Carol|Infra|On-call rotation|4
+Carol|Data|Reporting exports|5,6
+Dan|Growth|Onboarding flow|1,2
+Dan|Mobile|Mobile push notifications|3,4
+Dan|Mobile|Deep links|5,6
+Eve|Design|Design system upgrade|1,2,3
+Eve|Design|Accessibility audit|4,5
+Eve|Design|Marketing site refresh|6
+Frank|Data|Data pipeline migration|1,2,3,4
+Frank|Data|ETL monitoring|5,6
+Grace|Search|Search relevance|1,2
+Grace|Search|Query autocomplete|3,4
+Grace|Search|Personalization|5,6
+Henry|Infra|Kubernetes upgrade|1,2
+Henry|Infra|Observability stack|3,4,5
+Henry|Infra|Secrets rotation|6
+Ivy|Support|Customer support tooling|1,2,3
+Ivy|Support|Ticket triage bot|4,5,6
+Jack|Commerce|Billing invoices|1,2
+Jack|Commerce|Tax calculation|3,4
+Jack|Commerce|Subscription lifecycle|5,6
+Karen|Mobile|iOS release 4.2|1,2
+Karen|Mobile|Android release 4.2|3,4
+Karen|Mobile|Crash reporting|5,6
+Leo|Security|Security audit|1,2,3
+Leo|Security|Pen test remediation|4,5
+Leo|Security|SOC2 evidence|6
+Mia|Internal|Internal tools|1,2
+Mia|Internal|Admin portal|3,4,5
+Mia|Internal|Audit logs|6
+Noah|Docs|Docs rewrite|1,2
+Noah|Docs|API reference|3,4
+Noah|Docs|Video tutorials|5,6
+Olivia|Growth|Growth experiments|1,2,3
+Olivia|Growth|Referral program|4,5,6`;
 
 const SAMPLE_HOLIDAYS = `Alice|2026-05-04
 Bob|2026-05-26,2026-05-27
@@ -150,20 +150,20 @@ function parseTasks(text) {
     const trimmed = line.trim();
     if (!trimmed) return;
     const parts = trimmed.split('|').map((p) => p.trim());
-    if (parts.length !== 3) {
-      errors.push(`Task line ${idx + 1}: expected "Person|Task|sprint,numbers"`);
+    if (parts.length !== 4) {
+      errors.push(`Task line ${idx + 1}: expected "Person|Category|Task|sprint,numbers"`);
       return;
     }
-    const [person, task, sprintList] = parts;
+    const [person, category, task, sprintList] = parts;
     const sprintNums = sprintList
       .split(',')
       .map((s) => Number(s.trim()))
       .filter((n) => !Number.isNaN(n));
-    if (!person || !task || sprintNums.length === 0) {
-      errors.push(`Task line ${idx + 1}: missing person, task, or sprint numbers`);
+    if (!person || !category || !task || sprintNums.length === 0) {
+      errors.push(`Task line ${idx + 1}: missing person, category, task, or sprint numbers`);
       return;
     }
-    rows.push({ person, task, sprints: sprintNums });
+    rows.push({ person, category, task, sprints: sprintNums });
   });
   return { tasks: rows, errors };
 }
@@ -288,9 +288,10 @@ export default function App() {
       runs.forEach((run) => {
         map.get(t.person).push({
           task: t.task,
+          category: t.category,
           startSprint: run[0],
           span: run.length,
-          color: hashColor(t.task),
+          color: hashColor(t.category),
         });
       });
     });
@@ -306,23 +307,25 @@ export default function App() {
     });
   };
 
-  const taskGantt = useMemo(() => {
-    const byTask = new Map();
+  const categoryGantt = useMemo(() => {
+    const byCat = new Map();
     const order = [];
     tasks.forEach((t) => {
-      if (!byTask.has(t.task)) {
-        byTask.set(t.task, { task: t.task, people: new Set(), sprints: new Set() });
-        order.push(t.task);
+      if (!byCat.has(t.category)) {
+        byCat.set(t.category, { category: t.category, people: new Set(), sprints: new Set(), tasks: new Set() });
+        order.push(t.category);
       }
-      const rec = byTask.get(t.task);
+      const rec = byCat.get(t.category);
       rec.people.add(t.person);
+      rec.tasks.add(t.task);
       t.sprints.forEach((n) => rec.sprints.add(n));
     });
     return order.map((name) => {
-      const rec = byTask.get(name);
+      const rec = byCat.get(name);
       return {
-        task: name,
+        category: name,
         people: [...rec.people],
+        tasks: [...rec.tasks],
         runs: groupRuns([...rec.sprints], sprintNums),
         color: hashColor(name),
       };
@@ -331,7 +334,7 @@ export default function App() {
 
   const effort = useMemo(() => {
     const sprintByNum = new Map(sprints.map((s) => [s.number, s]));
-    const byTask = new Map();
+    const byCategory = new Map();
     tasks.forEach((t) => {
       let personDays = 0;
       t.sprints.forEach((n) => {
@@ -341,12 +344,21 @@ export default function App() {
         const hd = holidayDaysInSprint(t.person, sp, holidays);
         personDays += Math.max(0, wd - hd);
       });
-      if (!byTask.has(t.task)) byTask.set(t.task, { task: t.task, total: 0, contributors: [], color: hashColor(t.task) });
-      const rec = byTask.get(t.task);
+      if (!byCategory.has(t.category)) {
+        byCategory.set(t.category, { category: t.category, total: 0, byPerson: new Map(), color: hashColor(t.category) });
+      }
+      const rec = byCategory.get(t.category);
       rec.total += personDays;
-      rec.contributors.push({ person: t.person, days: personDays });
+      rec.byPerson.set(t.person, (rec.byPerson.get(t.person) || 0) + personDays);
     });
-    return [...byTask.values()].sort((a, b) => b.total - a.total);
+    return [...byCategory.values()]
+      .map((r) => ({
+        ...r,
+        contributors: [...r.byPerson.entries()]
+          .map(([person, days]) => ({ person, days }))
+          .sort((a, b) => b.days - a.days),
+      }))
+      .sort((a, b) => b.total - a.total);
   }, [tasks, sprints, holidays]);
 
   const allErrors = [...sprintErrors, ...taskErrors, ...holidayErrors];
@@ -369,7 +381,7 @@ export default function App() {
           />
         </div>
         <div className="card">
-          <label>Tasks <span className="hint">Person | Task | sprint,numbers</span></label>
+          <label>Tasks <span className="hint">Person | Category | Task | sprint,numbers</span></label>
           <textarea
             value={tasksText}
             onChange={(e) => setTasksText(e.target.value)}
@@ -512,16 +524,16 @@ export default function App() {
       </section>
 
       <section className="effort">
-        <h2 className="effort-title">Task delivery Gantt</h2>
+        <h2 className="effort-title">Category delivery Gantt</h2>
         <p className="effort-sub">
-          One row per task. Bars show the sprint window in which the task is being delivered (union across all contributors). Gaps split into separate runs.
+          One row per category. Bars show the superset of sprints across every task and contributor in that category. Gaps split into separate runs.
         </p>
         <div className="timeline">
           <div className="timeline-scroll">
             <table>
               <thead>
                 <tr>
-                  <th className="task-col">Task</th>
+                  <th className="task-col">Category</th>
                   {sprints.map((s) => (
                     <th key={s.number} className="sprint-col">
                       <div className="sprint-num">Sprint {s.number}</div>
@@ -533,7 +545,7 @@ export default function App() {
                 </tr>
               </thead>
               <tbody>
-                {taskGantt.map((row) => {
+                {categoryGantt.map((row) => {
                   const runByStart = new Map();
                   row.runs.forEach((run) => runByStart.set(run[0], run));
                   const cells = [];
@@ -543,23 +555,23 @@ export default function App() {
                     const run = runByStart.get(s.number);
                     if (run) {
                       const span = run.length;
-                      const title = `${row.task} · sprints ${run[0]}–${run[run.length - 1]} · ${row.people.length} contributor${row.people.length === 1 ? '' : 's'}`;
+                      const title = `${row.category} · sprints ${run[0]}–${run[run.length - 1]} · ${row.tasks.length} task${row.tasks.length === 1 ? '' : 's'} · ${row.people.length} contributor${row.people.length === 1 ? '' : 's'}`;
                       cells.push(
-                        <td key={`${row.task}-${s.number}`} colSpan={span} className="task-cell">
+                        <td key={`${row.category}-${s.number}`} colSpan={span} className="task-cell">
                           <div
                             className="task-chip"
                             style={{ background: row.color.bg, color: row.color.fg }}
                             title={title}
                           >
-                            <span className="task-title">{row.task}</span>
-                            <span className="task-meta">{span}s · {row.people.length}p</span>
+                            <span className="task-title">{row.category}</span>
+                            <span className="task-meta">{span}s · {row.tasks.length}t · {row.people.length}p</span>
                           </div>
                         </td>
                       );
                       i += span;
                     } else {
                       cells.push(
-                        <td key={`${row.task}-${s.number}`} className="empty-cell">
+                        <td key={`${row.category}-${s.number}`} className="empty-cell">
                           <span className="muted">—</span>
                         </td>
                       );
@@ -567,13 +579,13 @@ export default function App() {
                     }
                   }
                   return (
-                    <tr key={row.task}>
+                    <tr key={row.category}>
                       <td className="task-col name">
                         <span className="task-swatch" style={{ background: row.color.bg }} />
                         <span className="gantt-task-name">
-                          <span className="gantt-task-title">{row.task}</span>
-                          {row.people.length > 0 && (
-                            <span className="gantt-contribs">{row.people.join(', ')}</span>
+                          <span className="gantt-task-title">{row.category}</span>
+                          {row.tasks.length > 0 && (
+                            <span className="gantt-contribs">{row.tasks.join(', ')}</span>
                           )}
                         </span>
                       </td>
@@ -581,7 +593,7 @@ export default function App() {
                     </tr>
                   );
                 })}
-                {(taskGantt.length === 0 || sprints.length === 0) && (
+                {(categoryGantt.length === 0 || sprints.length === 0) && (
                   <tr>
                     <td className="empty" colSpan={sprints.length + 1}>
                       Add tasks and sprints to see the Gantt.
@@ -595,16 +607,16 @@ export default function App() {
       </section>
 
       <section className="effort">
-        <h2 className="effort-title">Effort estimate per task</h2>
+        <h2 className="effort-title">Effort estimate per category</h2>
         <p className="effort-sub">
-          Person-days per task, summed across contributors. Working days = weekdays in each sprint minus that person's holidays.
+          Person-days per category, summed across every task and contributor. Working days = weekdays in each sprint minus that person's holidays.
         </p>
         <div className="timeline">
           <div className="timeline-scroll">
             <table className="effort-table">
               <thead>
                 <tr>
-                  <th className="effort-task-col">Task</th>
+                  <th className="effort-task-col">Category</th>
                   <th className="effort-total-col">Total days</th>
                   <th className="effort-bar-col">Relative effort</th>
                 </tr>
@@ -614,13 +626,13 @@ export default function App() {
                   const max = effort[0]?.total || 1;
                   const pct = Math.max(2, (e.total / max) * 100);
                   return (
-                    <tr key={e.task}>
+                    <tr key={e.category}>
                       <td className="effort-task">
                         <span
                           className="task-swatch"
                           style={{ background: e.color.bg }}
                         />
-                        {e.task}
+                        {e.category}
                       </td>
                       <td className="effort-total">
                         <div className="effort-total-row">
